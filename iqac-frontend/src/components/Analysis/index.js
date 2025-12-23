@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './index.css';
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || "http://localhost:5000";
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || "https://iqac-demo.onrender.com";
 
 const Analysis = () => {
     const navigate = useNavigate();
