@@ -85,7 +85,11 @@ const uploadExplanationFile = async (file, metadata) => {
         await fs.writeFile(filePath, file.data);
         
         // Return relative path (for database storage)
-        const relativePath = path.relative(path.join(__dirname, 'uploads'), filePath);
+        // Store POSIX-style relative path so it works on Linux/Windows
+        const relativePath = path
+            .relative(path.join(__dirname, 'uploads'), filePath)
+            .split(path.sep)
+            .join('/');
         
         return {
             success: true,
@@ -290,7 +294,9 @@ const deleteExplanationDocument = async (documentId, user = null) => {
  */
 const getExplanationFile = async (filePath) => {
     try {
-        const fullPath = path.join(__dirname, 'uploads', filePath);
+        // Normalize any Windows-style separators stored in DB
+        const normalized = (filePath || '').toString().replace(/\\/g, '/');
+        const fullPath = path.join(__dirname, 'uploads', ...normalized.split('/'));
         const fileContent = await fs.readFile(fullPath);
         return fileContent;
     } catch (error) {
