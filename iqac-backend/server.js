@@ -5,7 +5,7 @@ const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const dotenv = require('dotenv');
-const FRONTEND_APP_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_APP_URL = process.env.FRONTEND_URL || 'https://iqac-repo3.vercel.app';
 const { handleFileUpload, deleteDataByFilters } = require('./uplod_file_backend');
 const { handleCoursesUpload } = require('./courses_upload');
 
