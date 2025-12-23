@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './index.css';
 
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || "http://localhost:5000";
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || "https://iqac-repo3.onrender.com";
 
 const UploadCourses = () => {
     const [file, setFile] = useState(null);
