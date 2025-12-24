@@ -65,14 +65,51 @@ const handleFileUpload = async (file) => {
         console.log('Excel file parsed successfully');
         console.log('Available sheets:', workbook.SheetNames);
 
-        // Try to find the first sheet that actually has data
+        // Try to find the first sheet that actually has data.
+        // Some files have title rows above the header row, so we use a heuristic.
         let rows = [];
         let usedSheetName = null;
 
         for (const sheetName of workbook.SheetNames) {
             const sheet = workbook.Sheets[sheetName];
-            const sheetRows = XLSX.utils.sheet_to_json(sheet);
-            console.log(`Sheet "${sheetName}" has ${sheetRows.length} data rows`);
+
+            // Get all rows as raw arrays first
+            const headerRows = XLSX.utils.sheet_to_json(sheet, {
+                header: 1,       // return arrays, not objects
+                defval: null     // keep empty cells as null
+            });
+
+            console.log(`Sheet "${sheetName}" raw rows count: ${headerRows.length}`);
+
+            if (!headerRows || headerRows.length === 0) {
+                continue;
+            }
+
+            // Heuristic: find the first row that looks like a header row
+            // (at least 5 non-empty cells)
+            let headerIndex = -1;
+            for (let i = 0; i < headerRows.length; i++) {
+                const row = headerRows[i] || [];
+                const nonEmptyCount = row.filter(v => v !== null && v !== '').length;
+                if (nonEmptyCount >= 5) {
+                    headerIndex = i;
+                    console.log(`Potential header row found in "${sheetName}" at index ${i}:`, row);
+                    break;
+                }
+            }
+
+            if (headerIndex === -1) {
+                console.log(`No suitable header row found in sheet "${sheetName}"`);
+                continue;
+            }
+
+            // Now convert to JSON using the detected header row as the header
+            const sheetRows = XLSX.utils.sheet_to_json(sheet, {
+                range: headerIndex, // header row will be used as keys
+                defval: null
+            });
+
+            console.log(`Sheet "${sheetName}" has ${sheetRows.length} data rows after header detection`);
 
             if (sheetRows && sheetRows.length > 0) {
                 usedSheetName = sheetName;
@@ -82,7 +119,7 @@ const handleFileUpload = async (file) => {
         }
 
         if (!usedSheetName) {
-            console.error('No sheet with data found in workbook');
+            console.error('No sheet with data found in workbook after scanning all sheets');
             throw new Error('No data found in file');
         }
 
