@@ -74,18 +74,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Configure file upload to use temp files instead of keeping whole files in memory
-// This significantly reduces RAM usage for large Excel uploads on Render
-app.use(fileUpload({
-    useTempFiles: true,
-    tempFileDir: '/tmp',
-    limits: {
-        // Adjust this limit as needed; 25MB is usually safe for most Excel files
-        fileSize: 25 * 1024 * 1024
-    },
-    abortOnLimit: true
-}));
+app.use(fileUpload());
 
 // Report routes
 const reportRoutes = require('./report_routes');
@@ -1259,13 +1248,7 @@ app.post('/api/upload', async (req, res) => {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
 
-        // Avoid logging the entire file buffer to prevent huge memory usage
-        console.log('File received:', {
-            name: req.files.file.name,
-            size: req.files.file.size,
-            mimetype: req.files.file.mimetype,
-            tempFilePath: req.files.file.tempFilePath
-        });
+        console.log('File received:', req.files.file);
         const result = await handleFileUpload(req.files.file);
         
         console.log('Upload result:', result);
