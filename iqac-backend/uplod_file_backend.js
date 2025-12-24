@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
+const fs = require('fs');
 const dotenv = require('dotenv');
 
 // Load environment variables
@@ -49,9 +50,18 @@ const handleFileUpload = async (file) => {
             throw new Error('Invalid file or empty file received');
         }
 
-        // Parse XLSX from buffer
+        // Parse XLSX from buffer or temp file (when using express-fileupload with useTempFiles)
         console.log('Attempting to parse Excel file...');
-        const workbook = XLSX.read(file.data, { type: "buffer" });
+        let workbook;
+
+        // Prefer buffer if present (e.g., in local/dev), otherwise fall back to temp file path
+        if (file.data) {
+            workbook = XLSX.read(file.data, { type: "buffer" });
+        } else if (file.tempFilePath) {
+            workbook = XLSX.readFile(file.tempFilePath);
+        } else {
+            throw new Error('No file data or temp file path available for parsing');
+        }
         console.log('Excel file parsed successfully');
         console.log('Available sheets:', workbook.SheetNames);
 
