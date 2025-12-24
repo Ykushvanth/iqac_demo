@@ -65,8 +65,28 @@ const handleFileUpload = async (file) => {
         console.log('Excel file parsed successfully');
         console.log('Available sheets:', workbook.SheetNames);
 
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet);
+        // Try to find the first sheet that actually has data
+        let rows = [];
+        let usedSheetName = null;
+
+        for (const sheetName of workbook.SheetNames) {
+            const sheet = workbook.Sheets[sheetName];
+            const sheetRows = XLSX.utils.sheet_to_json(sheet);
+            console.log(`Sheet "${sheetName}" has ${sheetRows.length} data rows`);
+
+            if (sheetRows && sheetRows.length > 0) {
+                usedSheetName = sheetName;
+                rows = sheetRows;
+                break;
+            }
+        }
+
+        if (!usedSheetName) {
+            console.error('No sheet with data found in workbook');
+            throw new Error('No data found in file');
+        }
+
+        console.log('Using sheet:', usedSheetName);
         console.log('Number of rows found:', rows.length);
         console.log('Sample row:', rows[0]);
         
