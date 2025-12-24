@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './index.css';
 
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || "https://iqac-demo.onrender.com";
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || "https://iqac-demo.render.com";
 
 const Home = () => {
   const navigate = useNavigate();
