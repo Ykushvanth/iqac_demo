@@ -7,7 +7,6 @@ const path = require('path');
 const dotenv = require('dotenv');
 const FRONTEND_APP_URL = process.env.FRONTEND_URL || 'https://iqac-demo.vercel.app';
 const { handleFileUpload, deleteDataByFilters } = require('./uplod_file_backend');
-const { handleCoursesUpload } = require('./courses_upload');
 
 const { 
     getDistinctDegrees,
@@ -1245,8 +1244,6 @@ app.delete('/api/questions/:id', async (req, res) => {
 });
 
 // ==================== FILE UPLOAD ROUTES ====================
-const { processUpload, generateJobId, createJob, getJob } = require('./upload_worker');
-
 app.post('/api/upload', async (req, res) => {
     try {
         console.log('Received upload request');
@@ -1256,73 +1253,21 @@ app.post('/api/upload', async (req, res) => {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
 
-        const file = req.files.file;
-        console.log('File received:', { name: file.name, size: file.size });
-
-        // Create a job and immediately return 202 Accepted
-        const jobId = generateJobId();
-        createJob(jobId, file.name, file.tempFilePath);
-
-        console.log(`[${jobId}] Upload queued for async processing`);
-
-        // Return immediately (non-blocking)
-        res.status(202).json({
-            success: true,
-            message: 'Upload accepted for processing',
-            jobId: jobId,
-            fileName: file.name,
-            fileSize: file.size,
-            statusUrl: `/api/upload/status/${jobId}`
-        });
-
-        // Process asynchronously in background (don't await)
-        setImmediate(async () => {
-            try {
-                await processUpload(jobId, file.tempFilePath);
-            } catch (error) {
-                console.error(`[${jobId}] Background processing error:`, error);
-            }
-        });
-
+        console.log('File received:', req.files.file);
+        const result = await handleFileUpload(req.files.file);
+        
+        console.log('Upload result:', result);
+        
+        if (result.success) {
+            res.status(200).json(result);
+        } else {
+            res.status(500).json(result);
+        }
     } catch (error) {
         console.error('Upload error:', error);
         res.status(500).json({ 
             success: false,
             message: 'Error processing file',
-            error: error.message 
-        });
-    }
-});
-
-// Check upload status
-app.get('/api/upload/status/:jobId', async (req, res) => {
-    try {
-        const { jobId } = req.params;
-        const job = getJob(jobId);
-
-        if (!job) {
-            return res.status(404).json({ success: false, message: 'Job not found' });
-        }
-
-        res.json({
-            jobId,
-            status: job.status,
-            message: job.message,
-            fileName: job.fileName,
-            rowsProcessed: job.rowsProcessed,
-            createdAt: job.createdAt,
-            startTime: job.startTime,
-            endTime: job.endTime,
-            result: job.result,
-            duration: job.endTime && job.startTime 
-                ? `${((job.endTime - job.startTime) / 1000).toFixed(1)}s` 
-                : null
-        });
-    } catch (error) {
-        console.error('Status check error:', error);
-        res.status(500).json({ 
-            success: false,
-            message: 'Error checking status',
             error: error.message 
         });
     }
@@ -1371,35 +1316,6 @@ app.post('/api/upload/delete', async (req, res) => {
         res.status(500).json({ 
             success: false,
             message: 'Error deleting data',
-            error: error.message 
-        });
-    }
-});
-
-app.post('/api/upload-courses', async (req, res) => {
-    try {
-        console.log('Received courses upload request');
-        
-        if (!req.files || !req.files.file) {
-            console.log('No file in request');
-            return res.status(400).json({ success: false, message: 'No file uploaded' });
-        }
-
-        console.log('Courses file received:', req.files.file);
-        const result = await handleCoursesUpload(req.files.file);
-        
-        console.log('Courses upload result:', result);
-        
-        if (result.success) {
-            res.status(200).json(result);
-        } else {
-            res.status(500).json(result);
-        }
-    } catch (error) {
-        console.error('Courses upload error:', error);
-        res.status(500).json({ 
-            success: false,
-            message: 'Error processing courses file',
             error: error.message 
         });
     }
