@@ -80,12 +80,33 @@ const handleFileUpload = async (file) => {
             }
             return null;
         };
-                // Add batching for large datasets
-                const batchSize = 1000;
+                // Add batching for large datasets - increased batch size for faster uploads
+                const batchSize = 5000;
                 const normalizedData = [];
                 let insertedCount = 0;
                 let skippedCount = 0;
                 const errors = [];
+                const startTime = Date.now();
+                let rowsProcessed = 0;
+
+                // Helper to insert with exponential backoff retry
+                const insertBatchWithRetry = async (batch, maxRetries = 2) => {
+                    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                        try {
+                            const { data, error } = await supabase.from('course_feedback_new').insert(batch);
+                            if (error) throw error;
+                            return true;
+                        } catch (err) {
+                            if (attempt < maxRetries) {
+                                const waitMs = Math.min(1000 * Math.pow(2, attempt), 5000);
+                                console.log(`Insert failed, retrying in ${waitMs}ms (attempt ${attempt + 1}/${maxRetries})...`);
+                                await new Promise(resolve => setTimeout(resolve, waitMs));
+                            } else {
+                                throw err;
+                            }
+                        }
+                    }
+                };
 
                 // If a temp file path exists, stream-parse using ExcelJS to avoid high memory usage
                 if (file.tempFilePath) {
@@ -179,15 +200,19 @@ const handleFileUpload = async (file) => {
 
                         normalizedData.push(obj);
 
+                        rowsProcessed++;
+                        
                         // Insert in batches
                         if (normalizedData.length === batchSize) {
-                            console.log(`Inserting batch of ${normalizedData.length} records...`);
-                            const { data, error } = await supabase.from('course_feedback_new').insert(normalizedData);
-                            if (error) {
-                                throw error;
-                            }
+                            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                            console.log(`[${elapsed}s] Inserting batch of ${normalizedData.length} records...`);
+                            await insertBatchWithRetry(normalizedData);
                             insertedCount += normalizedData.length;
                             normalizedData.length = 0;
+                            if (rowsProcessed % (batchSize * 2) === 0) {
+                                const rate = (rowsProcessed / ((Date.now() - startTime) / 1000)).toFixed(0);
+                                console.log(`Progress: ${rowsProcessed} rows at ${rate} rows/sec`);
+                            }
                         }
                     } catch (rowError) {
                         skippedCount++;
@@ -198,20 +223,27 @@ const handleFileUpload = async (file) => {
 
             // Insert any remaining records
             if (normalizedData.length > 0) {
-                const { error } = await supabase.from('course_feedback_new').insert(normalizedData);
-                if (error) throw error;
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                console.log(`[${elapsed}s] Inserting final batch of ${normalizedData.length} records...`);
+                await insertBatchWithRetry(normalizedData);
                 insertedCount += normalizedData.length;
                 normalizedData.length = 0;
             }
 
+            const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            const rate = rowsProcessed > 0 ? (rowsProcessed / ((Date.now() - startTime) / 1000)).toFixed(0) : 0;
+            console.log(`✓ Upload complete in ${totalTime}s: ${insertedCount} inserted, ${skippedCount} skipped (${rate} rows/sec)`);
+
             return {
                 success: true,
-                message: `Successfully uploaded ${insertedCount + skippedCount} records (inserted: ${insertedCount}, skipped: ${skippedCount})`,
+                message: `Successfully uploaded ${insertedCount + skippedCount} records in ${totalTime}s`,
                 count: insertedCount + skippedCount,
                 inserted: insertedCount,
                 skipped: skippedCount,
                 errors: errors.slice(0, 10),
-                totalErrors: errors.length
+                totalErrors: errors.length,
+                duration: totalTime,
+                throughput: `${rate} rows/sec`
             };
         }
 
