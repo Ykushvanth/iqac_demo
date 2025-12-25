@@ -146,102 +146,78 @@ const UploadFile = () => {
         }
     };
 
-    // Add this to your frontend index.js
-
-const handleUpload = async () => {
-    if (uploadMode === 'delete') {
-        if (!filters.degree || !filters.currentAY || !filters.semester) {
-            setMessage('Error: Please select all required filters');
-            return;
-        }
-    } else {
-        if (!file) {
-            handleFileInputClick();
-            setMessage('Please select a file to upload');
-            return;
-        }
-        
-        // Check file size on frontend (50MB limit)
-        const maxSize = 50 * 1024 * 1024;
-        if (file.size > maxSize) {
-            setMessage(`Error: File too large. Maximum size is 50MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-            return;
-        }
-    }
-
-    setLoading(true);
-    const formData = new FormData();
-    
-    if (uploadMode === 'add') {
-        formData.append('file', file);
-    } else {
-        formData.append('mode', 'delete');
-        formData.append('degree', filters.degree);
-        formData.append('currentAY', filters.currentAY);
-        formData.append('semester', filters.semester);
-        if (filters.courseOfferingDept) {
-            formData.append('courseOfferingDept', filters.courseOfferingDept);
-        }
-    }
-
-    try {
-        console.log('Starting operation...', uploadMode);
-        
-        const endpoint = uploadMode === 'delete' 
-            ? `${SERVER_URL}/api/upload/delete` 
-            : `${SERVER_URL}/api/upload`;
-            
-        const response = await axios.post(endpoint, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            },
-            timeout: 600000, // 10 minutes timeout
-            maxContentLength: 50 * 1024 * 1024, // 50MB
-            maxBodyLength: 50 * 1024 * 1024,
-            onUploadProgress: uploadMode === 'add' ? (progressEvent) => {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                console.log('Upload progress:', percentCompleted + '%');
-                setMessage(`Uploading... ${percentCompleted}%`);
-            } : undefined
-        });
-
-        console.log('Server response:', response.data);
-
-        if (response.data.success) {
-            if (uploadMode === 'delete') {
-                setMessage(`Success! Deleted ${response.data.count} records.`);
-                alert(`Delete successful! ${response.data.count} records deleted.`);
-                setFilters({ degree: '', currentAY: '', semester: '', courseOfferingDept: '' });
-            } else {
-                setMessage(`Success! Uploaded ${response.data.count} records.`);
-                alert(`Upload successful! ${response.data.count} records added to database.`);
-                setFile(null);
-                const fileInput = document.querySelector('input[type="file"]');
-                if (fileInput) fileInput.value = '';
+    const handleUpload = async () => {
+        if (uploadMode === 'delete') {
+            // Validate filters for delete mode
+            if (!filters.degree || !filters.currentAY || !filters.semester) {
+                setMessage('Error: Please select all required filters (Degree, Academic Year, Semester)');
+                return;
             }
         } else {
-            const errorMsg = response.data.message || 'Operation failed';
-            setMessage(`Error: ${errorMsg}`);
-            alert(`Error: ${errorMsg}`);
+            // Validate file for add mode - if no file, open file picker
+            if (!file) {
+                handleFileInputClick();
+                setMessage('Please select a file to upload');
+                return;
+            }
         }
-    } catch (error) {
-        console.error('Operation error:', error);
-        let errorMessage = 'Operation failed';
+
+        setLoading(true);
+        const formData = new FormData();
         
-        if (error.code === 'ECONNABORTED') {
-            errorMessage = 'Request timeout. File might be too large or connection is slow.';
-        } else if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-        } else if (error.message) {
-            errorMessage = error.message;
+        if (uploadMode === 'add') {
+            formData.append('file', file);
+        } else {
+            // For delete mode, send filters
+            formData.append('mode', 'delete');
+            formData.append('degree', filters.degree);
+            formData.append('currentAY', filters.currentAY);
+            formData.append('semester', filters.semester);
+            if (filters.courseOfferingDept) {
+                formData.append('courseOfferingDept', filters.courseOfferingDept);
+            }
         }
-        
-        setMessage('Error: ' + errorMessage);
-        alert('Error: ' + errorMessage);
-    } finally {
-        setLoading(false);
-    }
-};
+
+        try {
+            console.log('Starting operation...', uploadMode);
+            
+            const endpoint = uploadMode === 'delete' ? `${SERVER_URL}/api/upload/delete` : `${SERVER_URL}/api/upload`;
+            const response = await axios.post(endpoint, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                },
+                onUploadProgress: uploadMode === 'add' ? (progressEvent) => {
+                    console.log('Upload progress:', Math.round((progressEvent.loaded * 100) / progressEvent.total));
+                } : undefined
+            });
+
+            console.log('Server response:', response.data);
+
+            if (response.data.success) {
+                if (uploadMode === 'delete') {
+                    setMessage(`Success! Deleted ${response.data.count} records from course feedback database.`);
+                    alert(`Delete successful! ${response.data.count} records deleted from database.`);
+                    // Reset filters
+                    setFilters({ degree: '', currentAY: '', semester: '', courseOfferingDept: '' });
+                } else {
+                    setMessage(`Success! Uploaded ${response.data.count} records to course feedback database.`);
+                    alert(`Upload successful! ${response.data.count} records added to database.`);
+                    setFile(null);
+                    const fileInput = document.querySelector('input[type="file"]');
+                    if (fileInput) fileInput.value = '';
+                }
+            } else {
+                setMessage((uploadMode === 'delete' ? 'Delete failed: ' : 'Upload failed: ') + response.data.message);
+                alert((uploadMode === 'delete' ? 'Delete failed: ' : 'Upload failed: ') + response.data.message);
+            }
+        } catch (error) {
+            console.error('Operation error:', error);
+            setMessage('Error: ' + (error.response?.data?.message || error.message));
+            alert('Error: ' + (error.response?.data?.message || error.message));
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="upload-page-container">
