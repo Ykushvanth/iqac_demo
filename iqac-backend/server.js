@@ -74,7 +74,13 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(fileUpload());
+// Use temp files for uploads to avoid keeping large files in-memory
+// and set a reasonable size limit. Temp files will be created in `tmp/`.
+app.use(fileUpload({
+    useTempFiles: true,
+    tempFileDir: path.join(__dirname, 'tmp'),
+    limits: { fileSize: 50 * 1024 * 1024 } // 50 MB file size limit (adjust as needed)
+}));
 
 // Report routes
 const reportRoutes = require('./report_routes');

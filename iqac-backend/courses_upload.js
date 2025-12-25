@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 
 // Load environment variables
 dotenv.config();
+const fs = require('fs');
 
 // Initialize Supabase client with fetch implementation
 const fetch = require('cross-fetch');
@@ -41,9 +42,16 @@ const handleCoursesUpload = async (file) => {
             throw new Error('Invalid file or empty file received');
         }
 
-        // Parse XLSX from buffer
+        // Parse XLSX from temp file (preferred) or buffer (fallback)
         console.log('Attempting to parse Excel file...');
-        const workbook = XLSX.read(file.data, { type: "buffer" });
+        let workbook;
+        if (file.tempFilePath) {
+            console.log('Reading Excel from temp file:', file.tempFilePath);
+            workbook = XLSX.readFile(file.tempFilePath);
+        } else {
+            console.log('No temp file path provided; reading from buffer (may use more memory)');
+            workbook = XLSX.read(file.data, { type: "buffer" });
+        }
         console.log('Excel file parsed successfully');
         console.log('Available sheets:', workbook.SheetNames);
 
@@ -263,6 +271,18 @@ const handleCoursesUpload = async (file) => {
             message: error.message || 'Upload failed',
             error: error
         };
+    } finally {
+        // Clean up temp file if it was created by express-fileupload
+        try {
+            if (file && file.tempFilePath) {
+                fs.unlink(file.tempFilePath, (err) => {
+                    if (err) console.warn('Failed to delete temp file:', file.tempFilePath, err.message);
+                    else console.log('Temp file deleted:', file.tempFilePath);
+                });
+            }
+        } catch (cleanupErr) {
+            console.warn('Error during temp file cleanup:', cleanupErr.message);
+        }
     }
 };
 
