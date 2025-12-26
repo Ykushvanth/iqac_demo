@@ -377,48 +377,134 @@ const AnalysisResults = () => {
 
     return (
         <div className="analysis-results-container">
-            <div className="dashboard-header">
-                <div className="header-content">
-                    <img 
-                        src="https://www.kalasalingam.ac.in/wp-content/uploads/2022/02/Logo.png" 
-                        alt="Kalasalingam Logo"
-                        className="logo"
-                    />
-                    <div className="faculty-info">
-                        <h2>{facultyData.faculty_name || facultyData.name}</h2>
-                        <p>
-                            <span className="label">Course:</span>
-                            <span className="highlight">{analysisData.course_code} - {analysisData.course_name}</span>
-                        </p>
-                        <p>
-                            <span className="label">Staff ID:</span>
-                            <span className="highlight">{analysisData.staff_id}</span>
-                            <span className="divider">•</span>
-                            <span className="label">Total Responses:</span>
-                            <span className="highlight">{analysisData.total_responses}</span>
-                        </p>
+            <div className="dashboard-header-professional">
+                <div className="header-top-section">
+                    <div className="institution-branding">
+                        <img 
+                            src="https://www.kalasalingam.ac.in/wp-content/uploads/2022/02/Logo.png" 
+                            alt="Kalasalingam Logo"
+                            className="institution-logo"
+                        />
+                        <div className="institution-details">
+                            <h3 className="institution-name">Kalasalingam Academy of Research and Education</h3>
+                            <p className="report-type">Faculty Feedback Analysis Report</p>
+                        </div>
+                    </div>
+                    <div className="header-actions">
+                        <button onClick={handleBackToAnalysis} className="header-btn secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            Back to Analysis
+                        </button>
+                        <button onClick={handleGenerateReport} className="header-btn primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                                <polyline points="13 2 13 9 20 9"/>
+                            </svg>
+                            Generate Report
+                        </button>
+                        <button onClick={() => navigate('/')} className="home-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            Home
+                        </button>
+                        <button onClick={handleLogout} className="logout-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            Logout
+                        </button>
                     </div>
                 </div>
-                <div className="header-actions">
-                    <button onClick={handleBackToAnalysis} className="header-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 12H5M12 19l-7-7 7-7"/>
-                        </svg>
-                        Back to Analysis
-                    </button>
-                    <button onClick={handleGenerateReport} className="header-btn primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-                            <polyline points="13 2 13 9 20 9"/>
-                        </svg>
-                        Generate Report
-                    </button>
-                    <button onClick={() => navigate('/')} className="home-btn">
-                        <span>🏠</span> Home
-                    </button>
-                    <button onClick={handleLogout} className="logout-btn">
-                        <span>🚪</span> Logout
-                    </button>
+                
+                <div className="faculty-details-card">
+                    <div className="faculty-header-section">
+                        <div className="faculty-avatar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <div className="faculty-primary-info">
+                            <h1 className="faculty-name">{facultyData.faculty_name || facultyData.name}</h1>
+                            <div className="faculty-id-badge">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="8.5" cy="7" r="4"/>
+                                    <line x1="20" y1="8" x2="20" y2="14"/>
+                                    <line x1="23" y1="11" x2="17" y2="11"/>
+                                </svg>
+                                Staff ID: {analysisData.staff_id}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="faculty-info-grid">
+                        <div className="info-item course-info">
+                            <div className="info-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                                </svg>
+                            </div>
+                            <div className="info-content">
+                                <span className="info-label">Course</span>
+                                <span className="info-value">{analysisData.course_code}</span>
+                                <span className="info-subtitle">{analysisData.course_name}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="info-item">
+                            <div className="info-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                            <div className="info-content">
+                                <span className="info-label">Total Responses</span>
+                                <span className="info-value">{analysisData.total_responses}</span>
+                                <span className="info-subtitle">Student Feedbacks</span>
+                            </div>
+                        </div>
+                        
+                        <div className="info-item">
+                            <div className="info-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                            </div>
+                            <div className="info-content">
+                                <span className="info-label">Academic Year</span>
+                                <span className="info-value">{analysisData.current_ay || analysisData.currentAY || 'N/A'}</span>
+                                <span className="info-subtitle">Semester {analysisData.semester || 'N/A'}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="info-item">
+                            <div className="info-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                                </svg>
+                            </div>
+                            <div className="info-content">
+                                <span className="info-label">Department</span>
+                                <span className="info-value">{analysisData.course_offering_dept_name || analysisData.dept || 'N/A'}</span>
+                                <span className="info-subtitle">{analysisData.degree || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
