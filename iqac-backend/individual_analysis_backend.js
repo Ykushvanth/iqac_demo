@@ -257,13 +257,15 @@ const getFacultyCompleteHistory = async (staffId) => {
             questionColumns.push(`qn${i}`);
         }
 
+        console.log('Sample record fields:', allData.length > 0 ? Object.keys(allData[0]) : 'No data');
+
         allData.forEach(record => {
             const currentAY = cleanString(record.current_ay) || 'N/A';
             const semester = cleanString(record.semester) || 'N/A';
             const courseCode = cleanString(record.course_code) || 'N/A';
             const courseName = cleanString(record.course_name) || 'N/A';
             const degree = cleanString(record.degree) || 'N/A';
-            const dept = cleanString(record.dept) || 'N/A';
+            const dept = cleanString(record.course_offering_dept_name) || cleanString(record.dept) || 'N/A';
             const batch = cleanString(record.batch) || 'N/A';
 
             const key = `${currentAY}_${semester}_${courseCode}`;

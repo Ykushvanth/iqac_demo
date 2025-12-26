@@ -491,6 +491,7 @@ const getFeedbackAnalysis = async (degree, currentAY, semester, courseOfferingDe
             arts_or_engg: feedbackData[0].arts_or_engg || '',
             short_form: feedbackData[0].short_form || '',
             sec: feedbackData[0].sec || '',
+            course_offering_dept_name: feedbackData[0].course_offering_dept_name || courseOfferingDept || '',
             // Include new filter information for comments loading
             degree: degree,
             currentAY: currentAY,
