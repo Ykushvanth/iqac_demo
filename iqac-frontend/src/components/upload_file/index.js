@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { supabase } from '../../supabaseClient';
 import './index.css';
 
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || "https://iqac-demo.render.com";
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || "https://iqac-demo.onrender.com";
 
 const UploadFile = () => {
     const navigate = useNavigate();
