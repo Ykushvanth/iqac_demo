@@ -1329,5 +1329,5 @@ app.listen(PORT, () => {
     console.log(`Authentication routes available at http://localhost:${PORT}/api/auth/*`);
     
     // Start Supabase keep-alive service (pings every 10 hours)
-    startKeepAliveService(1/60); // 1/60 hours = 1 minute for testing, change to 10 for production
+    startKeepAliveService(10); // 1/60 hours = 1 minute for testing, change to 10 for production
 });
