@@ -59,6 +59,7 @@ const {
     getCoursesBySchoolDeptAndFilters
 } = require('./school_wise_report');
 const { sendOTP, verifyOTP } = require('./login');
+const { startKeepAliveService } = require('./supabase_keepalive');
 
 // Load environment variables
 dotenv.config();
@@ -1326,4 +1327,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Authentication routes available at http://localhost:${PORT}/api/auth/*`);
+    
+    // Start Supabase keep-alive service (pings every 10 hours)
+    startKeepAliveService(1/60); // 1/60 hours = 1 minute for testing, change to 10 for production
 });
